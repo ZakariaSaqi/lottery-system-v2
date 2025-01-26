@@ -9,11 +9,7 @@ const moment = require("moment");
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = "/tmp/uploads"; // Use /tmp/uploads for temporary storage
-    fs.mkdir(uploadDir, { recursive: true }, (err) => {
-      if (err) return cb(err);
-      cb(null, uploadDir);
-    });
+    cb(null, "tmp/uploads/"); // Save uploaded files to the "uploads" folder
   },
   filename: (req, file, cb) => {
     cb(null, file.originalname); // Use the original file name
@@ -21,6 +17,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage }).single("file"); // Expect a file with the field name "file"
+
 // Function to recursively process folders and extract HTML files
 const processFolderRecursively = async (folderPath, allPersons) => {
   try {
@@ -262,7 +259,7 @@ const processFolder = asyncHandler(async (req, res) => {
       // Check if the uploaded file is a zip folder
       if (path.extname(filePath).toLowerCase() === ".zip") {
         const zip = new AdmZip(filePath); // Initialize AdmZip
-        extractPath = "/tmp/extracted"; // Use /tmp/extracted for temporary storage
+        extractPath = path.join(__dirname, "../tmp/extracted");
 
         // Ensure the extracted directory exists
         try {

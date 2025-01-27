@@ -1,8 +1,8 @@
 require("dotenv").config();
-const express = require("express");
-const { processFolder } = require("./controller/process-folder"); // Import the controller
+const express = require("express"); // Import the controller
 const app = express();
 const cors = require("cors");
+const { processFolder } = require("./controller/backup");
 app.use(express.json());
 
 app.use(express.json());

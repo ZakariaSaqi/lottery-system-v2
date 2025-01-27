@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs").promises; // Use fs.promises for async operations
 const cheerio = require("cheerio");
 const multer = require("multer");
-const AdmZip = require("adm-zip");
+const AdmZip = require("adm-zip");  
 const moment = require("moment");
 
 // Configure multer for file uploads
@@ -223,194 +223,193 @@ const extractDiversityVisaInfo = async (filePath) => {
 };
 
 const processFolder = asyncHandler(async (req, res) => {
-  // let filePath = null;
-  // let extractPath = null;
+  let filePath = null;
+  let extractPath = null;
 
-  // try {
-  //   console.log("processFolder endpoint hit"); // Debug log
+  try {
+    console.log("processFolder endpoint hit"); // Debug log
 
-  //   upload(req, res, async (err) => {
-  //     if (err) {
-  //       console.error("Multer error:", err); // Debug log
-  //       return res.status(500).json({ message: "Error uploading file" });
-  //     }
+    upload(req, res, async (err) => {
+      if (err) {
+        console.error("Multer error:", err); // Debug log
+        return res.status(500).json({ message: "Error uploading file" });
+      }
 
-  //     if (!req.file) {
-  //       console.error("No file uploaded"); // Debug log
-  //       return res.status(400).json({ message: "No file uploaded" });
-  //     }
+      if (!req.file) {
+        console.error("No file uploaded"); // Debug log
+        return res.status(400).json({ message: "No file uploaded" });
+      }
 
-  //     console.log("Uploaded file:", req.file); // Debug log
-  //     filePath = req.file.path;
-  //     console.log("File path:", filePath); // Debug log
+      console.log("Uploaded file:", req.file); // Debug log
+      filePath = req.file.path;
+      console.log("File path:", filePath); // Debug log
 
-  //     // Extract date and folderType from the request body
-  //     const { date, folderType } = req.body;
-  //     if (!date || !folderType) {
-  //       return res
-  //         .status(400)
-  //         .json({ message: "Date and folderType are required" });
-  //     }
+      // Extract date and folderType from the request body
+      const { date, folderType } = req.body;
+      if (!date || !folderType) {
+        return res
+          .status(400)
+          .json({ message: "Date and folderType are required" });
+      }
 
-  //     // Generate the Excel file name
-  //     const formattedDate = moment(date).format("YYYY-MM-DD"); // Format as YYYY-MM-DD
-  //     const excelFileName = `${formattedDate}_${folderType}.xlsx`;
+      // Generate the Excel file name
+      const formattedDate = moment(date).format("YYYY-MM-DD"); // Format as YYYY-MM-DD
+      const excelFileName = `${formattedDate}_${folderType}.xlsx`;
 
-  //     // Check if the uploaded file is a zip folder
-  //     if (path.extname(filePath).toLowerCase() === ".zip") {
-  //       const zip = new AdmZip(filePath); // Initialize AdmZip
-  //       extractPath = path.join(__dirname, "../tmp/extracted");
+      // Check if the uploaded file is a zip folder
+      if (path.extname(filePath).toLowerCase() === ".zip") {
+        const zip = new AdmZip(filePath); // Initialize AdmZip
+        extractPath = path.join(__dirname, "../tmp/extracted");
 
-  //       // Ensure the extracted directory exists
-  //       try {
-  //         await fs.access(extractPath);
-  //       } catch {
-  //         await fs.mkdir(extractPath, { recursive: true });
-  //       }
+        // Ensure the extracted directory exists
+        try {
+          await fs.access(extractPath);
+        } catch {
+          await fs.mkdir(extractPath, { recursive: true });
+        }
 
-  //       // Extract the zip file
-  //       try {
-  //         await zip.extractAllToAsync(extractPath, true); // Use async extraction
-  //         console.log(
-  //           "Extracted folder contents:",
-  //           await fs.readdir(extractPath)
-  //         ); // Debug log
-  //       } catch (error) {
-  //         console.error("Error extracting zip file:", error); // Debug log
-  //         return res.status(500).json({ message: "Error extracting zip file" });
-  //       }
+        // Extract the zip file
+        try {
+          await zip.extractAllToAsync(extractPath, true); // Use async extraction
+          console.log(
+            "Extracted folder contents:",
+            await fs.readdir(extractPath)
+          ); // Debug log
+        } catch (error) {
+          console.error("Error extracting zip file:", error); // Debug log
+          return res.status(500).json({ message: "Error extracting zip file" });
+        }
 
-  //       // Process the extracted folder
-  //       const persons = [];
-  //       await processFolderRecursively(extractPath, persons);
+        // Process the extracted folder
+        const persons = [];
+        await processFolderRecursively(extractPath, persons);
 
-  //       // Create Excel file
-  //       try {
-  //         if (!persons.length) {
-  //           return res
-  //             .status(400)
-  //             .json({ message: "No data found in the folder" });
-  //         }
+        // Create Excel file
+        try {
+          if (!persons.length) {
+            return res
+              .status(400)
+              .json({ message: "No data found in the folder" });
+          }
 
-  //         const combinedPersons = [];
-  //         const folderMap = new Map();
+          const combinedPersons = [];
+          const folderMap = new Map();
 
-  //         // Group data by folder
-  //         persons.forEach((person) => {
-  //           if (!folderMap.has(person.folder)) {
-  //             folderMap.set(person.folder, []);
-  //           }
-  //           folderMap.get(person.folder).push(person);
-  //         });
+          // Group data by folder
+          persons.forEach((person) => {
+            if (!folderMap.has(person.folder)) {
+              folderMap.set(person.folder, []);
+            }
+            folderMap.get(person.folder).push(person);
+          });
 
-  //         // Match entrant and visa data
-  //         folderMap.forEach((folderData, folder) => {
-  //           const diversityVisaData = folderData.filter((p) => p.gender); // Find all Diversity Visa files
-  //           const entrantData = folderData.filter((p) => p.entrantName); // Find all Entrant files
+          // Match entrant and visa data
+          folderMap.forEach((folderData, folder) => {
+            const diversityVisaData = folderData.filter((p) => p.gender); // Find all Diversity Visa files
+            const entrantData = folderData.filter((p) => p.entrantName); // Find all Entrant files
 
-  //           // Merge entrant data with diversity visa data
-  //           entrantData.forEach((entrant) => {
-  //             // Find matching diversity visa data based on firstName
-  //             const matchingVisaData = diversityVisaData.find((visa) =>
-  //               entrant.entrantName
-  //                 .toUpperCase()
-  //                 .includes(visa.firstName.toUpperCase())
-  //             );
+            // Merge entrant data with diversity visa data
+            entrantData.forEach((entrant) => {
+              // Find matching diversity visa data based on firstName
+              const matchingVisaData = diversityVisaData.find((visa) =>
+                entrant.entrantName
+                  .toUpperCase()
+                  .includes(visa.firstName.toUpperCase())
+              );
 
-  //             // Define default values for all fields
-  //             const defaultPerson = {
-  //               entrantName: "Manque",
-  //               confirmationNumber: "Manque",
-  //               yearOfBirth: "Manque",
-  //               firstName: "Manque",
-  //               gender: "Manque",
-  //               country: "Manque",
-  //               phoneNumber: "Manque",
-  //               email: "Manque",
-  //               status: "Manque",
-  //               numberOfChildren: "Manque",
-  //               folder: folder,
-  //             };
+              // Define default values for all fields
+              const defaultPerson = {
+                entrantName: "Manque",
+                confirmationNumber: "Manque",
+                yearOfBirth: "Manque",
+                firstName: "Manque",
+                gender: "Manque",
+                country: "Manque",
+                phoneNumber: "Manque",
+                email: "Manque",
+                status: "Manque",
+                numberOfChildren: "Manque",
+                folder: folder,
+              };
 
-  //             // If entrant data is missing, replace all fields with "Manque"
-  //             if (
-  //               entrant.entrantName === "Manque" ||
-  //               entrant.confirmationNumber === "Manque" ||
-  //               entrant.yearOfBirth === "Manque"
-  //             ) {
-  //               combinedPersons.push(defaultPerson);
-  //               return; // Skip to the next entrant
-  //             }
+              // If entrant data is missing, replace all fields with "Manque"
+              if (
+                entrant.entrantName === "Manque" ||
+                entrant.confirmationNumber === "Manque" ||
+                entrant.yearOfBirth === "Manque"
+              ) {
+                combinedPersons.push(defaultPerson);
+                return; // Skip to the next entrant
+              }
 
-  //             // Merge entrant data with matching visa data (if found)
-  //             const mergedPerson = {
-  //               ...defaultPerson, // Start with default values
-  //               ...entrant, // Override with entrant data
-  //               ...(matchingVisaData || {}), // Override with visa data (if available)
-  //               folder, // Ensure folder is set
-  //             };
+              // Merge entrant data with matching visa data (if found)
+              const mergedPerson = {
+                ...defaultPerson, // Start with default values
+                ...entrant, // Override with entrant data
+                ...(matchingVisaData || {}), // Override with visa data (if available)
+                folder, // Ensure folder is set
+              };
 
-  //             combinedPersons.push(mergedPerson);
-  //           });
-  //         });
+              combinedPersons.push(mergedPerson);
+            });
+          });
 
-  //         console.log("Combined Persons data:", combinedPersons);
+          console.log("Combined Persons data:", combinedPersons);
 
-  //         // Add a default entry with "Manque" values if no data is found
-  //         if (!combinedPersons.length) {
-  //           combinedPersons.push({
-  //             entrantName: "Manque",
-  //             confirmationNumber: "Manque",
-  //             yearOfBirth: "Manque",
-  //             firstName: "Manque",
-  //             gender: "Manque",
-  //             country: "Manque",
-  //             phoneNumber: "Manque",
-  //             email: "Manque",
-  //             status: "Manque",
-  //             numberOfChildren: "Manque",
-  //             folder: "Manque",
-  //           });
-  //         }
+          // Add a default entry with "Manque" values if no data is found
+          if (!combinedPersons.length) {
+            combinedPersons.push({
+              entrantName: "Manque",
+              confirmationNumber: "Manque",
+              yearOfBirth: "Manque",
+              firstName: "Manque",
+              gender: "Manque",
+              country: "Manque",
+              phoneNumber: "Manque",
+              email: "Manque",
+              status: "Manque",
+              numberOfChildren: "Manque",
+              folder: "Manque",
+            });
+          }
 
-  //         // Return the processed data and Excel file name
-  //         return res.status(200).json({
-  //           message: "Data extracted successfully",
-  //           data: combinedPersons,
-  //           excelFileName,
-  //         });
-  //       } catch (error) {
-  //         console.error("Error creating Excel file:", error); // Debug log
-  //         return res.status(500).json({ message: "Error creating Excel file" });
-  //       }
-  //     } else {
-  //       console.error("Uploaded file is not a zip folder:", filePath); // Debug log
-  //       return res
-  //         .status(400)
-  //         .json({ message: "Uploaded file is not a zip folder" });
-  //     }
-  //   });
-  // } catch (error) {
-  //   console.error("Unhandled error in processFolder:", error); // Debug log
-  //   return res.status(500).json({ message: "Internal server error" });
-  // } finally {
-  //   try {
-  //     // Delete the uploaded file
-  //     if (filePath) {
-  //       await fs.unlink(filePath);
-  //       console.log("Uploaded file deleted successfully:", filePath);
-  //     }
+          // Return the processed data and Excel file name
+          return res.status(200).json({
+            message: "Data extracted successfully",
+            data: combinedPersons,
+            excelFileName,
+          });
+        } catch (error) {
+          console.error("Error creating Excel file:", error); // Debug log
+          return res.status(500).json({ message: "Error creating Excel file" });
+        }
+      } else {
+        console.error("Uploaded file is not a zip folder:", filePath); // Debug log
+        return res
+          .status(400)
+          .json({ message: "Uploaded file is not a zip folder" });
+      }
+    });
+  } catch (error) {
+    console.error("Unhandled error in processFolder:", error); // Debug log
+    return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    try {
+      // Delete the uploaded file
+      if (filePath) {
+        await fs.unlink(filePath);
+        console.log("Uploaded file deleted successfully:", filePath);
+      }
 
-  //     // Delete the extracted folder
-  //     if (extractPath) {
-  //       await fs.rm(extractPath, { recursive: true, force: true });
-  //       console.log("Extracted folder deleted successfully:", extractPath);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error during cleanup:", error);
-  //   }
-  // }
-  console.log("hello")
+      // Delete the extracted folder
+      if (extractPath) {
+        await fs.rm(extractPath, { recursive: true, force: true });
+        console.log("Extracted folder deleted successfully:", extractPath);
+      }
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    }
+  }
 });
 
 module.exports = { processFolder };

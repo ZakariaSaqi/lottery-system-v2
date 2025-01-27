@@ -150,12 +150,13 @@ const processFolder = asyncHandler(async (req, res) => {
       const excelFileName = `${formattedDate}_${folderType}.xlsx`;
 
       try {
-        // Upload the file to Cloudinary
+        // Uploaaaaaaad the file to Cloudinary
         const uploadResult = await cloudinary.uploader.upload(
           `data:application/zip;base64,${req.file.buffer.toString("base64")}`,
           {
             resource_type: "raw",
             public_id: `uploads/${req.file.originalname}`,
+            timeout: 300000,
           }
         );
 

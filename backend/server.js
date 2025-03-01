@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express"); // Import the controller
 const app = express();
 const cors = require("cors");
-const { processFolder } = require("./controller/backup");
+const { processFolder } = require("./controller/backup2");
 app.use(express.json());
 
 app.use(express.json());
@@ -17,6 +17,7 @@ app.use(
 app.get("/", (req, res) => {
   res.json("Connected");
 });
+
 app.post("/process-folder", processFolder);
 
 // Start the server
